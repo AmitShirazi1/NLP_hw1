@@ -8,6 +8,8 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id):
     You can implement Beam Search to improve runtime
     Implement q efficiently (refer to conditional probability definition in MEMM slides)
     """
+
+    
     pass
 
 
