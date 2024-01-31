@@ -1,3 +1,4 @@
+import numpy as np
 from preprocessing import read_test
 from tqdm import tqdm
 
@@ -7,9 +8,9 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id):
     Write your MEMM Viterbi implementation below
     You can implement Beam Search to improve runtime
     Implement q efficiently (refer to conditional probability definition in MEMM slides)
-    """
+    """        
+    q_func = lambda y: np.exp(np.dot(pre_trained_weights, feature2id.represent_input_with_features(sentence, y)))
 
-    
     pass
 
 
