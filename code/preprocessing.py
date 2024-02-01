@@ -124,6 +124,10 @@ class Feature2id:
             (np.ones(len(small_rows)), (np.array(small_rows), np.array(small_cols))),
             shape=(len(
                 self.feature_statistics.histories), self.n_total_features), dtype=bool)
+        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        print(self.small_matrix)
+        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+
 
 
 def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[Tuple[str, str], int]])\

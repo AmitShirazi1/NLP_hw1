@@ -7,7 +7,7 @@ from inference import tag_all_test
 def main():
     threshold = 1
     lam = 1
-
+    
     train_path = "data/train1.wtag"
     test_path = "data/comp1.words"
 
@@ -19,10 +19,14 @@ def main():
 
     with open(weights_path, 'rb') as f:
         optimal_params, feature2id = pickle.load(f)
+    for feature in feature2id.feature_to_idx['f100']:
+        if feature == ('The','DT'):
+            print("yes")
     pre_trained_weights = optimal_params[0]
 
     print(pre_trained_weights)
     tag_all_test(test_path, pre_trained_weights, feature2id, predictions_path)
+    
 
 
 if __name__ == '__main__':
