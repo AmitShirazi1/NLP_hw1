@@ -23,6 +23,9 @@ def main():
         if feature == ('The','DT'):
             print("yes")
     pre_trained_weights = optimal_params[0]
+    print('big matrix:', feature2id.big_matrix)
+    print('small matrix:', feature2id.small_matrix)
+
 
     print(pre_trained_weights)
     tag_all_test(test_path, pre_trained_weights, feature2id, predictions_path)

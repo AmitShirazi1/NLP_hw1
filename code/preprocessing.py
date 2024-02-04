@@ -145,6 +145,8 @@ def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[
     # f100
     if (c_word, c_tag) in dict_of_dicts["f100"]:
         features.append(dict_of_dicts["f100"][(c_word, c_tag)])
+    
+    
 
     return features
 
