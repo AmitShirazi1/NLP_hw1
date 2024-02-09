@@ -2,7 +2,7 @@ from scipy import sparse
 from collections import OrderedDict, defaultdict
 import numpy as np
 from typing import List, Dict, Tuple
-
+import string
 
 WORD = 0
 TAG = 1
@@ -13,7 +13,8 @@ class FeatureStatistics:
         self.n_total_features = 0  # Total number of features accumulated
 
         # Init all features dictionaries
-        feature_dict_list = [f'f10{i}' for i in range(8)]  # the feature classes used in the code
+        feature_dict_list = [f'f10{i}' for i in range(10)]  # the feature classes used in the code
+        feature_dict_list.extend([f'f11{i}' for i in range(3)])
         self.feature_rep_dict = {fd: OrderedDict() for fd in feature_dict_list}
         '''
         A dictionary containing the counts of each data regarding a feature class. For example in f100, would contain
@@ -70,6 +71,27 @@ class FeatureStatistics:
 
         # f107
         self.update_feature_dict("f107", (n_word, c_tag))
+
+        ''' Our features: '''
+        # f108
+        if all(char.isdigit() if char not in (".", ",") else True for char in c_word) or c_tag == "CD":
+            self.update_feature_dict("f108", (c_word, c_tag))
+        
+        # f109
+        if c_word.isupper():
+            self.update_feature_dict("f109", (c_word, c_tag))
+
+        # f110
+        if c_word[0].isupper() and c_word[1:].islower() and (p_word == '*'):
+            self.update_feature_dict("f110", (c_word, c_tag))
+        
+        # f111
+        if c_word[0].isupper() and c_word[1:].islower() and (p_word != '*'):
+            self.update_feature_dict("f111", (c_word, c_tag))
+        
+        # f112
+        if all(char in string.punctuation for char in c_word):
+            self.update_feature_dict("f112", (c_word, c_tag))
         
 
 
@@ -129,6 +151,11 @@ class Feature2id:
             "f105": OrderedDict(),
             "f106": OrderedDict(),
             "f107": OrderedDict(),
+            "f108": OrderedDict(),
+            "f109": OrderedDict(),
+            "f110": OrderedDict(),
+            "f111": OrderedDict(),
+            "f112": OrderedDict()
         }
         self.represent_input_with_features = OrderedDict()
         self.histories_matrix = OrderedDict()
@@ -237,6 +264,26 @@ def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[
     # f107
     if (n_word, c_tag) in dict_of_dicts["f107"]:
         features.append(dict_of_dicts["f107"][(n_word, c_tag)])
+
+    # f108
+    if (c_word, c_tag) in dict_of_dicts["f108"]:
+        features.append(dict_of_dicts["f108"][(c_word, c_tag)])
+    
+    # f109
+    if (c_word, c_tag) in dict_of_dicts["f109"]:
+        features.append(dict_of_dicts["f109"][(c_word, c_tag)])
+
+    # f110
+    if (c_word, c_tag) in dict_of_dicts["f110"]:
+        features.append(dict_of_dicts["f110"][(c_word, c_tag)])
+
+    # f111
+    if (c_word, c_tag) in dict_of_dicts["f111"]:
+        features.append(dict_of_dicts["f111"][(c_word, c_tag)])
+    
+    # f112
+    if (c_word, c_tag) in dict_of_dicts["f112"]:
+        features.append(dict_of_dicts["f112"][(c_word, c_tag)])
 
     return features
 
