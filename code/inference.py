@@ -33,6 +33,8 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id):
     Implement q efficiently (refer to conditional probability definition in MEMM slides)
     """
     tags = list(feature2id.feature_statistics.tags) # TODO beam thingy
+    b = int(len(tags)/10)
+    beam_tags = range(len(tags))
 
     pi = np.ones(shape=(len(tags), len(tags)))  # Initialization
     back_pointer = np.zeros(shape=(len(sentence), len(tags), len(tags))) # in place i,j there will be the index of the tag, based on the tags set, 
@@ -41,7 +43,11 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id):
     q = dict()
     for word in sentence:
         prev_pi = pi
-        for i in range(len(tags)):
+        if k > 3:
+            max_probs_indices = np.unravel_index(np.argsort(prev_pi.ravel())[-b:], prev_pi.shape)
+            beam_tags = list(max_probs_indices[1])
+            pi = np.zeros(shape=(len(tags), len(tags)))
+        for i in beam_tags:
             for pp_tag in range(len(tags)):
                 q[pp_tag] = q_func(word, (sentence[k-1] if k >= 1 else '*', tags[i], sentence[k-2] if k >= 2 else '*', tags[pp_tag], sentence[k+1] if k < len(sentence) - 1 else '~'), pre_trained_weights, feature2id)
             for j in range(len(tags)):
@@ -55,15 +61,15 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id):
     our_tags = list()
     our_tags.append(tags[p_tag])
 
-    for k in range(len(sentence) - 3, -1, -1):
+    for k in range(len(sentence) - 3, 0, -1):
         pp_tag = int(back_pointer[k + 2][p_tag][c_tag])
         c_tag = p_tag
         p_tag = pp_tag
         our_tags.append(tags[pp_tag])
-
-    print(our_tags)
+    
+    # print(our_tags)
     our_tags.reverse()
-    print(our_tags)
+    print(our_tags[1:])
     return our_tags
 
 

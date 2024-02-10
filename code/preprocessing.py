@@ -49,12 +49,12 @@ class FeatureStatistics:
 
         # f101
         for i in range(-4, 0):
-            if len(c_word) >= i:
+            if len(c_word) > i:
                 self.update_feature_dict("f101", (c_word[i:], c_tag))
                         
         # f102
         for i in range(1, 5):
-            if i <= len(c_word):
+            if i < len(c_word):
                 self.update_feature_dict("f102", (c_word[:i], c_tag))
         
         # f103
@@ -73,8 +73,12 @@ class FeatureStatistics:
         self.update_feature_dict("f107", (n_word, c_tag))
 
         ''' Our features: '''
-        # f108
-        if all(char.isdigit() if char not in (".", ",") else True for char in c_word) or c_tag == "CD":
+        # f108               
+        if all(c_word[i].isdigit() or c_word[i] in ('.', ',') \
+                or (i < len(c_word)-1 and c_word[i] == "\\" and c_word[i+1] == "/") \
+                or (i > 0 and c_word[i] == "/" and c_word[i-1] == "\\")
+                for i in range(len(c_word))) \
+            or c_tag == "CD":
             self.update_feature_dict("f108", (c_word, c_tag))
         
         # f109
