@@ -6,6 +6,8 @@ from sklearn.metrics import confusion_matrix
 import zipfile
 import shutil
 
+import numpy as np # !!!! our import
+
 COMP_FILES_PATH = 'comps files'
 ID1 = input("insert ID1: ")
 ID2 = input("insert ID2: ")
@@ -153,6 +155,20 @@ def open_zip():
 if __name__ == '__main__':
     # e = open_zip()
     # calc_scores(e)
+    
+    accurary,prob_sent,conf_pd = compare_files('data/test1.wtag', '/Users/maorzelkin/Desktop/Studies/Third_Year/NLP/Ex1/NLP_hw1/pred/predictions_lam_1_thresh_0.25.wtag')
+    print(accurary)
+    print("\n\n")
+    print(conf_pd)
 
-    print(compare_files('data/test1.wtag', 'predictions.wtag'))
+    conf_matrix = conf_pd.to_numpy()
+    diag_idx = np.diag_indices_from(conf_matrix)
+    conf_matrix[diag_idx] = 0
 
+    sum_tags = np.sum(conf_matrix, axis=1)
+    print(sum_tags)
+    print(conf_matrix)
+    max_ten_tags = np.argpartition(sum_tags, 10)[-10:]
+    all_tags = conf_pd.index.to_list()
+    print(max_ten_tags)
+    print([all_tags[i] for i in max_ten_tags])
