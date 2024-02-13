@@ -7,7 +7,6 @@ import string
 WORD = 0
 TAG = 1
 
-
 class FeatureStatistics:
     def __init__(self):
         self.n_total_features = 0  # Total number of features accumulated
@@ -23,7 +22,7 @@ class FeatureStatistics:
         self.feature_prob_dict = {fd: OrderedDict() for fd in feature_dict_list}
         '''
         A dictionary containing the probabilities of each data regarding a feature class. For example in f100, would contain
-        the probability of times each (word, tag) pair appeared in the text w.r.t the word.
+        the probability that a (word, tag) pair appeared in the text w.r.t the word.
         '''
         self.tags = set()  # a set of all the seen tags
         self.tags.add("~")
@@ -37,6 +36,8 @@ class FeatureStatistics:
         @param feature_class: the feature class to update
         @param feature: the feature to update
         """
+        # update feature_prob_dict
+        # feature is a tuple that it's last item is c_tag
         if feature[:-1] not in self.feature_prob_dict[feature_class]:
             self.feature_prob_dict[feature_class][feature[:-1]] = {'total': 1, 
                                                                    feature[-1]: 1}
@@ -88,7 +89,7 @@ class FeatureStatistics:
         self.update_feature_dict("f107", (n_word, c_tag))
 
         ''' Our features: '''
-        # f108               
+        # f108 - Checks if c_word is a number or represents a number(e.g. hundred)
         if all(c_word[i].isdigit() or c_word[i] in ('.', ',') \
                 or (i < len(c_word)-1 and c_word[i] == "\\" and c_word[i+1] == "/") \
                 or (i > 0 and c_word[i] == "/" and c_word[i-1] == "\\")
@@ -96,31 +97,31 @@ class FeatureStatistics:
             or c_tag == "CD":
             self.update_feature_dict("f108", (c_word, c_tag))
         
-        # f109
+        # f109 - Checks if c_word is all in uppercase
         if c_word.isupper():
             self.update_feature_dict("f109", (c_word, c_tag))
 
-        # f110
+        # f110 - Checks if c_word starts with a uppercase letter and is the first word of the sentence
         if c_word[0].isupper() and c_word[1:].islower() and (p_word == '*'):
             self.update_feature_dict("f110", (c_word, c_tag))
         
-        # f111
+        # f111 - Checks if c_word represents a name
         if c_word[0].isupper() and c_word[1:].islower() and (p_word != '*'):
             self.update_feature_dict("f111", (c_word, c_tag))
         
-        # f112
+        # f112 - Check if c_word is made from punctuations
         if all(char in string.punctuation for char in c_word):
             self.update_feature_dict("f112", (c_word, c_tag))
 
-        # f113
-        # if not (p_word != "*" and c_word[0].isupper()):
+        # f113 - The same as f100 but if c_word is the first word of the sentence saves it with all lowercase letter
+        # (e.g. if "The" is the first word of the sentence, this feature will save "the")
         self.update_feature_dict("f113", (c_word.lower() if p_word == '*' else c_word, c_tag))
 
-        # f114
+        # f114 - length of c_word with c_tag
         self.update_feature_dict("f114", (len(c_word), c_tag))
 
-        # f115
-        self.update_feature_dict("f115", (pp_word, pp_tag, p_word, p_tag, c_word, c_tag, n_word))
+        # f115 - a window arround c_word, in order to get context about the past words and tags, and the next word
+        self.update_feature_dict("f115", (pp_word, pp_tag, p_word, p_tag, c_word, n_word, c_tag))
         
 
 
@@ -334,8 +335,8 @@ def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[
         features.append(dict_of_dicts["f114"][(len(c_word), c_tag)])
 
     # f115
-    if (pp_word, pp_tag, p_word, p_tag, c_word, c_tag, n_word) in dict_of_dicts["f115"]:
-        features.append(dict_of_dicts["f115"][(pp_word, pp_tag, p_word, p_tag, c_word, c_tag, n_word)])
+    if (pp_word, pp_tag, p_word, p_tag, c_word, n_word, c_tag) in dict_of_dicts["f115"]:
+        features.append(dict_of_dicts["f115"][(pp_word, pp_tag, p_word, p_tag, c_word, n_word, c_tag)])
     return features
 
 
