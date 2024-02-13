@@ -3,6 +3,8 @@ from preprocessing import preprocess_train
 from optimization import get_optimal_vector
 from inference import tag_all_test
 
+from sklearn.model_selection import train_test_split
+
 
 def main():
     runs = []
@@ -18,14 +20,14 @@ def main():
     print(runs)
     print(len(runs))
     for run in runs:
-        threshold = 0.10
-        lam = 1
+        threshold = 1
+        lam = 0.3
         
         train_path = "data/train1.wtag"
         test_path = "data/test1.wtag"
 
         weights_path = 'weights.pkl'
-        predictions_path = f'pred/predictions_lam_{lam}_thresh_{threshold}.wtag'
+        predictions_path = f'new/without_my_e_predictions_lam_{lam}_thresh_{threshold}_beam_1.wtag'
 
         statistics, feature2id = preprocess_train(train_path, threshold)
         get_optimal_vector(statistics=statistics, feature2id=feature2id, weights_path=weights_path, lam=lam)
@@ -45,6 +47,26 @@ def main():
         break
     
 
+def split_file(file_path):
+    data = []
+    with open(file_path) as file:
+            for line in file:
+                if line[-1:] == "\n":
+                    line = line[:-1]
+                data.append(line)
+
+    train, test = train_test_split(data, test_size=0.25, random_state=3)
+
+    f = open("mydata/train.wtag","w")
+    for line in train:
+        f.write(line + "\n")
+    f.close()
+
+    f = open("mydata/test.wtag","w")
+    for line in test:
+        f.write(line + "\n")
+    f.close()
 
 if __name__ == '__main__':
     main()
+    # split_file("data/train2.wtag")

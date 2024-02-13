@@ -26,6 +26,16 @@ def create_q_func_dict(c_word, history, pre_trained_weights, feature2id):
 
     return q_func_dict
 
+def e_func(feature2id):
+    feature_prob_dict = feature2id.feature_statistics.feature_prob_dict['f113']
+    prob_dict = {}
+    for c_word,value in feature_prob_dict.items():
+        for c_tag in value.keys():
+            if c_tag != "total":
+                prob_dict[(c_word,c_tag)] = value[c_tag] / value["total"]
+
+    return prob_dict
+
 def memm_viterbi(sentence, pre_trained_weights, feature2id):
     """
     Write your MEMM Viterbi implementation below
@@ -33,25 +43,29 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id):
     Implement q efficiently (refer to conditional probability definition in MEMM slides)
     """
     tags = list(feature2id.feature_statistics.tags) # TODO beam thingy
-    b = int(len(tags)/10)
+    b = 2 #int(len(tags)/10)
     beam_tags = range(len(tags))
-
+    prev_beam_tags = range(len(tags)) # ! maor
     pi = np.ones(shape=(len(tags), len(tags)))  # Initialization
     back_pointer = np.zeros(shape=(len(sentence), len(tags), len(tags))) # in place i,j there will be the index of the tag, based on the tags set, 
                                                                          # that will represent the tag
     k = 0
     q = dict()
+
+    e = e_func(feature2id)
     for word in sentence:
         prev_pi = pi
         if k > 3:
             max_probs_indices = np.unravel_index(np.argsort(prev_pi.ravel())[-b:], prev_pi.shape)
             beam_tags = list(max_probs_indices[1])
+            prev_beam_tags = list(max_probs_indices[0]) # ! maor
             pi = np.zeros(shape=(len(tags), len(tags)))
+
         for i in beam_tags:
-            for pp_tag in range(len(tags)):
+            for pp_tag in prev_beam_tags:
                 q[pp_tag] = q_func(word, (sentence[k-1] if k >= 1 else '*', tags[i], sentence[k-2] if k >= 2 else '*', tags[pp_tag], sentence[k+1] if k < len(sentence) - 1 else '~'), pre_trained_weights, feature2id)
             for j in range(len(tags)):
-                pi[i][j], back_pointer[k][i][j] = max_on_t(prev_pi, i, j, word, tags, pre_trained_weights, feature2id, q)
+                pi[i][j], back_pointer[k][i][j] = max_on_t(prev_pi, i, j, word, tags, prev_beam_tags, pre_trained_weights, feature2id, q, e)
         k += 1
     
     # p_tag, c_tag = np.argmax(pi)
@@ -69,7 +83,7 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id):
     
     # print(our_tags)
     our_tags.reverse()
-    print(our_tags[1:])
+    # print(our_tags[1:])
     return our_tags
 
 
@@ -88,15 +102,22 @@ def create_feature101_vector():
     pass
 
 
-def max_on_t(prev_pi, u, v, word, tags, pre_trained_weights, feature2id, q_func):
+def max_on_t(prev_pi, u, v, word, tags, prev_beam_tags, pre_trained_weights, feature2id, q_func, e_func):
     # TODO change word for sentence when finished with features
     max_p = 0
     max_probability_t = 0  # The index of the most probable pp-tag
     # TODO history is currently only {}, change accordingly to the features
 
-    for t in range(len(tags)):
+    # for t in range(len(tags)):
+    for t in prev_beam_tags:
         # p = prev_pi[t][u] * q_func[(word, v, dict(), pre_trained_weights, feature2id)] # TODO change word according to features to resmbel the leacutre algorithem
+        # TODO maor was here
         p = prev_pi[t][u] * q_func[t][v]
+        # if (word,tags[v]) in e_func.keys():
+        #     p = prev_pi[t][u] * q_func[t][v] * e_func[(word,tags[v])] 
+        # elif (word.lower(), tags[v]) in e_func.keys():
+        #     p = prev_pi[t][u] * q_func[t][v] * e_func[(word.lower(),tags[v])] 
+
         if max_p < p:
             max_p = p
             max_probability_t = t

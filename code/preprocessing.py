@@ -14,7 +14,7 @@ class FeatureStatistics:
 
         # Init all features dictionaries
         feature_dict_list = [f'f10{i}' for i in range(10)]  # the feature classes used in the code
-        feature_dict_list.extend([f'f11{i}' for i in range(4)])
+        feature_dict_list.extend([f'f11{i}' for i in range(6)])
         self.feature_rep_dict = {fd: OrderedDict() for fd in feature_dict_list}
         '''
         A dictionary containing the counts of each data regarding a feature class. For example in f100, would contain
@@ -47,10 +47,10 @@ class FeatureStatistics:
             self.feature_prob_dict[feature_class][feature[:-1]]['total'] += 1
             self.feature_prob_dict[feature_class][feature[:-1]][feature[-1]] += 1
 
-        # if feature not in self.feature_rep_dict[feature_class]:
-        #     self.feature_rep_dict[feature_class][feature] = 1
-        # else:
-        #     self.feature_rep_dict[feature_class][feature] += 1
+        if feature not in self.feature_rep_dict[feature_class]:
+            self.feature_rep_dict[feature_class][feature] = 1
+        else:
+            self.feature_rep_dict[feature_class][feature] += 1
 
 
     def create_features(self, pp, p, c, n) -> None:
@@ -112,9 +112,15 @@ class FeatureStatistics:
         if all(char in string.punctuation for char in c_word):
             self.update_feature_dict("f112", (c_word, c_tag))
 
-        
         # f113
-        self.update_feature_dict("f113", (c_word.lower(), c_tag))
+        # if not (p_word != "*" and c_word[0].isupper()):
+        self.update_feature_dict("f113", (c_word.lower() if p_word == '*' else c_word, c_tag))
+
+        # f114
+        self.update_feature_dict("f114", (len(c_word), c_tag))
+
+        # f115
+        self.update_feature_dict("f115", (pp_word, pp_tag, p_word, p_tag, c_word, c_tag, n_word))
         
 
 
@@ -179,7 +185,9 @@ class Feature2id:
             "f110": OrderedDict(),
             "f111": OrderedDict(),
             "f112": OrderedDict(),
-            "f113": OrderedDict()
+            "f113": OrderedDict(),
+            "f114": OrderedDict(),
+            "f115": OrderedDict()
         }
         self.represent_input_with_features = OrderedDict()
         self.histories_matrix = OrderedDict()
@@ -192,20 +200,19 @@ class Feature2id:
         Assigns each feature that appeared enough time in the train files an idx.
         Saves those indices to self.feature_to_idx
         """
-        for feat_class in self.feature_statistics.feature_prob_dict:
+        for feat_class in self.feature_statistics.feature_rep_dict:
             if feat_class not in self.feature_to_idx:
                 continue
-            for feature, tags in self.feature_statistics.feature_prob_dict[feat_class].items():
-                for tag in tags.keys():
-                    if tag != "total":
-                        if tags[tag]/tags["total"] > self.threshold:
-                            self.feature_to_idx[feat_class][feature + (tag,)] = self.n_total_features
-                            self.n_total_features += 1
-            # for feat, count in self.feature_statistics.feature_rep_dict[feat_class].items():
-            #     # if count >= self.threshold:
-            #     if sum_list[feat] > self.threshold:
-                    # self.feature_to_idx[feat_class][feat] = self.n_total_features
-                    # self.n_total_features += 1
+            # for feature, tags in self.feature_statistics.feature_prob_dict[feat_class].items():
+            #     for tag in tags.keys():
+            #         if tag != "total":
+            #             if tags[tag]/tags["total"] > self.threshold:
+            #                 self.feature_to_idx[feat_class][feature + (tag,)] = self.n_total_features
+            #                 self.n_total_features += 1
+            for feat, count in self.feature_statistics.feature_rep_dict[feat_class].items():
+                if count >= self.threshold:
+                    self.feature_to_idx[feat_class][feat] = self.n_total_features
+                    self.n_total_features += 1
         print(f"you have {self.n_total_features} features!")
 
 
@@ -316,9 +323,17 @@ def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[
     if (c_word, c_tag) in dict_of_dicts["f112"]:
         features.append(dict_of_dicts["f112"][(c_word, c_tag)])
 
+    # f113
     if (c_word.lower(), c_tag) in dict_of_dicts["f113"]:
-        features.append(dict_of_dicts["f113"][(c_word.lower(), c_tag)])
+        features.append(dict_of_dicts["f113"][(c_word.lower() if p_word == '*' else c_word, c_tag)])
 
+    # f114
+    if (len(c_word), c_tag) in dict_of_dicts["f114"]:
+        features.append(dict_of_dicts["f114"][(len(c_word), c_tag)])
+
+    # f115
+    if (pp_word, pp_tag, p_word, p_tag, c_word, c_tag, n_word) in dict_of_dicts["f115"]:
+        features.append(dict_of_dicts["f115"][(pp_word, pp_tag, p_word, p_tag, c_word, c_tag, n_word)])
     return features
 
 
