@@ -293,7 +293,7 @@ def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[
 
     # f105
     if (c_tag) in dict_of_dicts["f105"]:
-        features.append(dict_of_dicts["f105"][(c_tag)])
+        features.append(dict_of_dicts["f105"][(c_tag,)])
 
     # f106
     if (p_word, c_tag) in dict_of_dicts["f106"]:
@@ -324,7 +324,7 @@ def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[
         features.append(dict_of_dicts["f112"][(c_word, c_tag)])
 
     # f113
-    if (c_word.lower(), c_tag) in dict_of_dicts["f113"]:
+    if (c_word.lower() if p_word == '*' else c_word, c_tag) in dict_of_dicts["f113"]:
         features.append(dict_of_dicts["f113"][(c_word.lower() if p_word == '*' else c_word, c_tag)])
 
     # f114

@@ -27,7 +27,7 @@ def main():
         test_path = "data/test1.wtag"
 
         weights_path = 'weights.pkl'
-        predictions_path = f'new/without_my_e_predictions_lam_{lam}_thresh_{threshold}_beam_1.wtag'
+        predictions_path = f'new/with_my_e_predictions_lam_{lam}_thresh_{threshold}_beam_2.wtag'
 
         statistics, feature2id = preprocess_train(train_path, threshold)
         get_optimal_vector(statistics=statistics, feature2id=feature2id, weights_path=weights_path, lam=lam)

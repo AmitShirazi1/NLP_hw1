@@ -156,7 +156,7 @@ if __name__ == '__main__':
     # e = open_zip()
     # calc_scores(e)
     
-    accurary,prob_sent,conf_pd = compare_files('data/test1.wtag', '/Users/maorzelkin/Desktop/Studies/Third_Year/NLP/Ex1/NLP_hw1/new/without_my_e_predictions_lam_0.3_thresh_1_beam_1.wtag')
+    accurary,prob_sent,conf_pd = compare_files('data/test1.wtag', '/Users/maorzelkin/Desktop/Studies/Third_Year/NLP/Ex1/NLP_hw1/new/without_my_e_predictions_lam_0.3_thresh_1_beam_2.wtag')
     print(accurary)
     print("\n\n")
     print(conf_pd)
