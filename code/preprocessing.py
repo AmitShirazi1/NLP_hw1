@@ -203,16 +203,18 @@ class Feature2id:
         for feat_class in self.feature_statistics.feature_rep_dict:
             if feat_class not in self.feature_to_idx:
                 continue
-            # for feature, tags in self.feature_statistics.feature_prob_dict[feat_class].items():
-            #     for tag in tags.keys():
-            #         if tag != "total":
-            #             if tags[tag]/tags["total"] > self.threshold:
-            #                 self.feature_to_idx[feat_class][feature + (tag,)] = self.n_total_features
-            #                 self.n_total_features += 1
-            for feat, count in self.feature_statistics.feature_rep_dict[feat_class].items():
-                if count >= self.threshold:
-                    self.feature_to_idx[feat_class][feat] = self.n_total_features
-                    self.n_total_features += 1
+            if self.threshold[1] == "train2":
+                for feature, tags in self.feature_statistics.feature_prob_dict[feat_class].items():
+                    for tag in tags.keys():
+                        if tag != "total":
+                            if tags[tag]/tags["total"] > self.threshold[0]:
+                                self.feature_to_idx[feat_class][feature + (tag,)] = self.n_total_features
+                                self.n_total_features += 1
+            else:
+                for feat, count in self.feature_statistics.feature_rep_dict[feat_class].items():
+                    if count >= self.threshold[0]:
+                        self.feature_to_idx[feat_class][feat] = self.n_total_features
+                        self.n_total_features += 1
         print(f"you have {self.n_total_features} features!")
 
 

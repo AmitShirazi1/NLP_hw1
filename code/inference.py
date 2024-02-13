@@ -44,6 +44,7 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id):
     """
     tags = list(feature2id.feature_statistics.tags) # TODO beam thingy
     b = 2 #int(len(tags)/10)
+    print(b)
     beam_tags = range(len(tags))
     prev_beam_tags = range(len(tags)) # ! maor
     pi = np.ones(shape=(len(tags), len(tags)))  # Initialization
@@ -113,10 +114,10 @@ def max_on_t(prev_pi, u, v, word, tags, prev_beam_tags, pre_trained_weights, fea
         # p = prev_pi[t][u] * q_func[(word, v, dict(), pre_trained_weights, feature2id)] # TODO change word according to features to resmbel the leacutre algorithem
         # TODO maor was here
         p = prev_pi[t][u] * q_func[t][v]
-        # if (word,tags[v]) in e_func.keys():
-        #     p = prev_pi[t][u] * q_func[t][v] * e_func[(word,tags[v])] 
-        # elif (word.lower(), tags[v]) in e_func.keys():
-        #     p = prev_pi[t][u] * q_func[t][v] * e_func[(word.lower(),tags[v])] 
+        if (word,tags[v]) in e_func.keys():
+            p = prev_pi[t][u] * q_func[t][v] * e_func[(word,tags[v])] 
+        elif (word.lower(), tags[v]) in e_func.keys():
+            p = prev_pi[t][u] * q_func[t][v] * e_func[(word.lower(),tags[v])] 
 
         if max_p < p:
             max_p = p

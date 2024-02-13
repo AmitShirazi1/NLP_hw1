@@ -7,6 +7,7 @@ import zipfile
 import shutil
 
 import numpy as np # !!!! our import
+import copy
 
 COMP_FILES_PATH = 'comps files'
 ID1 = input("insert ID1: ")
@@ -153,22 +154,5 @@ def open_zip():
     return errors
 
 if __name__ == '__main__':
-    # e = open_zip()
-    # calc_scores(e)
-    
-    accurary,prob_sent,conf_pd = compare_files('data/test1.wtag', '/Users/maorzelkin/Desktop/Studies/Third_Year/NLP/Ex1/NLP_hw1/new/without_my_e_predictions_lam_0.3_thresh_1_beam_2.wtag')
-    print(accurary)
-    print("\n\n")
-    print(conf_pd)
-
-    conf_matrix = conf_pd.to_numpy()
-    diag_idx = np.diag_indices_from(conf_matrix)
-    conf_matrix[diag_idx] = 0
-
-    sum_tags = np.sum(conf_matrix, axis=1)
-    print(sum_tags)
-    print(conf_matrix)
-    max_ten_tags = np.argpartition(sum_tags, 10)[-10:]
-    all_tags = conf_pd.index.to_list()
-    print(max_ten_tags)
-    print([all_tags[i] for i in max_ten_tags])
+    e = open_zip()
+    calc_scores(e)
