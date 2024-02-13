@@ -76,7 +76,7 @@ def memm_viterbi(sentence, pre_trained_weights, feature2id):
                 q[pp_tag] = q_func(word, (sentence[k-1] if k >= 1 else '*', tags[i], sentence[k-2] if k >= 2 else '*', tags[pp_tag], sentence[k+1] if k < len(sentence) - 1 else '~'), pre_trained_weights, feature2id)
             # We calculated the q function outside of the below loop to save time
             for j in range(len(tags)):
-                pi[i][j], back_pointer[k][i][j] = max_on_t(prev_pi, i, j, word, tags, prev_beam_tags, pre_trained_weights, feature2id, q, w_t_prob)
+                pi[i][j], back_pointer[k][i][j] = max_on_t(prev_pi, i, j, word, tags, prev_beam_tags, q, w_t_prob)
                 # Maximize the probability of the previous-previous tag. The back_pointer will hold the index of the tag that will represent the previous-previous tag.
         k += 1
     
