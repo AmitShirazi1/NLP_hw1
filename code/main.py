@@ -2,47 +2,47 @@ import pickle
 from preprocessing import preprocess_train
 from optimization import get_optimal_vector
 from inference import tag_all_test
+from generate_comp_tagged import create_tagged_files
+
+import time
 
 
 def main():
-    runs = []
-    runs.append((50, 1))
-    for i in range(2, 10, 2):
-        for j in range(5, 20, 5):
-            runs.append((i,float(j)/10))
-    for j in range(5, 20, 4):
-        runs.append((1,float(j)/10))
-    for j in range(5, 20, 5):
-        runs.append((5,float(j)/10))
+    # MODEL 1
+    train_path = "data/train1.wtag"
+    test_path = "data/comp1.words"
     
-    print(runs)
-    print(len(runs))
-    for run in runs:
-        threshold = 0.10
-        lam = 1
-        
-        train_path = "data/train1.wtag"
-        test_path = "data/test1.wtag"
+    threshold = (1,"train1")
+    lam = 0.5
 
-        weights_path = 'weights.pkl'
-        predictions_path = f'pred/predictions_lam_{lam}_thresh_{threshold}.wtag'
+    weights_path = 'weights.pkl'
+    predictions_path = "comp_m1_314779166_325549681.wtag"
 
-        statistics, feature2id = preprocess_train(train_path, threshold)
-        get_optimal_vector(statistics=statistics, feature2id=feature2id, weights_path=weights_path, lam=lam)
-        # TODO: remove the comment from the line above
+    statistics, feature2id = preprocess_train(train_path, threshold)
 
-        with open(weights_path, 'rb') as f:
-            optimal_params, feature2id = pickle.load(f)
-        for feature in feature2id.feature_to_idx['f100']:
-            if feature == ('The','DT'):
-                print("yes")
-        pre_trained_weights = optimal_params[0]
-        # print('big matrix:', feature2id.big_matrix)
-        # print('small matrix:', feature2id.small_matrix)
+    t1 = time.time() # time before optimization
+    get_optimal_vector(statistics=statistics, feature2id=feature2id, weights_path=weights_path, lam=lam)
+    print(f"time of optimization is: {time.time() - t1}")# time after
 
-        print(pre_trained_weights)
-        tag_all_test(test_path, pre_trained_weights, feature2id, predictions_path)
-        break
+    create_tagged_files(test_path, weights_path, predictions_path)
+
+    # MODEL 2
+    train_path = "data/train2.wtag"
+    test_path = "data/comp2.words"
+    
+    threshold = (0.05, "train2")
+    lam = 0.5
+
+    weights_path = 'weights.pkl'
+    predictions_path = "comp_m2_314779166_325549681.wtag"
+
+    statistics, feature2id = preprocess_train(train_path, threshold)
+
+    t1 = time.time() # time before optimization
+    get_optimal_vector(statistics=statistics, feature2id=feature2id, weights_path=weights_path, lam=lam)
+    print(f"time of optimization is: {time.time() - t1}")# time after
+
+    create_tagged_files(test_path, weights_path, predictions_path)
     
 
 

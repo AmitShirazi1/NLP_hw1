@@ -7,14 +7,13 @@ import string
 WORD = 0
 TAG = 1
 
-
 class FeatureStatistics:
     def __init__(self):
         self.n_total_features = 0  # Total number of features accumulated
 
         # Init all features dictionaries
         feature_dict_list = [f'f10{i}' for i in range(10)]  # the feature classes used in the code
-        feature_dict_list.extend([f'f11{i}' for i in range(4)])
+        feature_dict_list.extend([f'f11{i}' for i in range(6)])
         self.feature_rep_dict = {fd: OrderedDict() for fd in feature_dict_list}
         '''
         A dictionary containing the counts of each data regarding a feature class. For example in f100, would contain
@@ -23,7 +22,7 @@ class FeatureStatistics:
         self.feature_prob_dict = {fd: OrderedDict() for fd in feature_dict_list}
         '''
         A dictionary containing the probabilities of each data regarding a feature class. For example in f100, would contain
-        the probability of times each (word, tag) pair appeared in the text w.r.t the word.
+        the probability that a (word, tag) pair appeared in the text w.r.t the word.
         '''
         self.tags = set()  # a set of all the seen tags
         self.tags.add("~")
@@ -37,6 +36,8 @@ class FeatureStatistics:
         @param feature_class: the feature class to update
         @param feature: the feature to update
         """
+        # update feature_prob_dict
+        # feature is a tuple that it's last item is c_tag
         if feature[:-1] not in self.feature_prob_dict[feature_class]:
             self.feature_prob_dict[feature_class][feature[:-1]] = {'total': 1, 
                                                                    feature[-1]: 1}
@@ -47,10 +48,10 @@ class FeatureStatistics:
             self.feature_prob_dict[feature_class][feature[:-1]]['total'] += 1
             self.feature_prob_dict[feature_class][feature[:-1]][feature[-1]] += 1
 
-        # if feature not in self.feature_rep_dict[feature_class]:
-        #     self.feature_rep_dict[feature_class][feature] = 1
-        # else:
-        #     self.feature_rep_dict[feature_class][feature] += 1
+        if feature not in self.feature_rep_dict[feature_class]:
+            self.feature_rep_dict[feature_class][feature] = 1
+        else:
+            self.feature_rep_dict[feature_class][feature] += 1
 
 
     def create_features(self, pp, p, c, n) -> None:
@@ -88,7 +89,7 @@ class FeatureStatistics:
         self.update_feature_dict("f107", (n_word, c_tag))
 
         ''' Our features: '''
-        # f108               
+        # f108 - Checks if c_word is a number or represents a number(e.g. hundred)
         if all(c_word[i].isdigit() or c_word[i] in ('.', ',') \
                 or (i < len(c_word)-1 and c_word[i] == "\\" and c_word[i+1] == "/") \
                 or (i > 0 and c_word[i] == "/" and c_word[i-1] == "\\")
@@ -96,25 +97,31 @@ class FeatureStatistics:
             or c_tag == "CD":
             self.update_feature_dict("f108", (c_word, c_tag))
         
-        # f109
+        # f109 - Checks if c_word is all in uppercase
         if c_word.isupper():
             self.update_feature_dict("f109", (c_word, c_tag))
 
-        # f110
+        # f110 - Checks if c_word starts with a uppercase letter and is the first word of the sentence
         if c_word[0].isupper() and c_word[1:].islower() and (p_word == '*'):
             self.update_feature_dict("f110", (c_word, c_tag))
         
-        # f111
+        # f111 - Checks if c_word represents a name
         if c_word[0].isupper() and c_word[1:].islower() and (p_word != '*'):
             self.update_feature_dict("f111", (c_word, c_tag))
         
-        # f112
+        # f112 - Check if c_word is made from punctuations
         if all(char in string.punctuation for char in c_word):
             self.update_feature_dict("f112", (c_word, c_tag))
 
-        
-        # f113
-        self.update_feature_dict("f113", (c_word.lower(), c_tag))
+        # f113 - The same as f100 but if c_word is the first word of the sentence saves it with all lowercase letter
+        # (e.g. if "The" is the first word of the sentence, this feature will save "the")
+        self.update_feature_dict("f113", (c_word.lower() if p_word == '*' else c_word, c_tag))
+
+        # f114 - length of c_word with c_tag
+        self.update_feature_dict("f114", (len(c_word), c_tag))
+
+        # f115 - a window arround c_word, in order to get context about the past words and tags, and the next word
+        self.update_feature_dict("f115", (pp_word, pp_tag, p_word, p_tag, c_word, n_word, c_tag))
         
 
 
@@ -179,7 +186,9 @@ class Feature2id:
             "f110": OrderedDict(),
             "f111": OrderedDict(),
             "f112": OrderedDict(),
-            "f113": OrderedDict()
+            "f113": OrderedDict(),
+            "f114": OrderedDict(),
+            "f115": OrderedDict()
         }
         self.represent_input_with_features = OrderedDict()
         self.histories_matrix = OrderedDict()
@@ -192,20 +201,21 @@ class Feature2id:
         Assigns each feature that appeared enough time in the train files an idx.
         Saves those indices to self.feature_to_idx
         """
-        for feat_class in self.feature_statistics.feature_prob_dict:
+        for feat_class in self.feature_statistics.feature_rep_dict:
             if feat_class not in self.feature_to_idx:
                 continue
-            for feature, tags in self.feature_statistics.feature_prob_dict[feat_class].items():
-                for tag in tags.keys():
-                    if tag != "total":
-                        if tags[tag]/tags["total"] > self.threshold:
-                            self.feature_to_idx[feat_class][feature + (tag,)] = self.n_total_features
-                            self.n_total_features += 1
-            # for feat, count in self.feature_statistics.feature_rep_dict[feat_class].items():
-            #     # if count >= self.threshold:
-            #     if sum_list[feat] > self.threshold:
-                    # self.feature_to_idx[feat_class][feat] = self.n_total_features
-                    # self.n_total_features += 1
+            if self.threshold[1] == "train2":
+                for feature, tags in self.feature_statistics.feature_prob_dict[feat_class].items():
+                    for tag in tags.keys():
+                        if tag != "total":
+                            if tags[tag]/tags["total"] > self.threshold[0]:
+                                self.feature_to_idx[feat_class][feature + (tag,)] = self.n_total_features
+                                self.n_total_features += 1
+            else:
+                for feat, count in self.feature_statistics.feature_rep_dict[feat_class].items():
+                    if count >= self.threshold[0]:
+                        self.feature_to_idx[feat_class][feat] = self.n_total_features
+                        self.n_total_features += 1
         print(f"you have {self.n_total_features} features!")
 
 
@@ -286,7 +296,7 @@ def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[
 
     # f105
     if (c_tag) in dict_of_dicts["f105"]:
-        features.append(dict_of_dicts["f105"][(c_tag)])
+        features.append(dict_of_dicts["f105"][(c_tag,)])
 
     # f106
     if (p_word, c_tag) in dict_of_dicts["f106"]:
@@ -316,9 +326,17 @@ def represent_input_with_features(history: Tuple, dict_of_dicts: Dict[str, Dict[
     if (c_word, c_tag) in dict_of_dicts["f112"]:
         features.append(dict_of_dicts["f112"][(c_word, c_tag)])
 
-    if (c_word.lower(), c_tag) in dict_of_dicts["f113"]:
-        features.append(dict_of_dicts["f113"][(c_word.lower(), c_tag)])
+    # f113
+    if (c_word.lower() if p_word == '*' else c_word, c_tag) in dict_of_dicts["f113"]:
+        features.append(dict_of_dicts["f113"][(c_word.lower() if p_word == '*' else c_word, c_tag)])
 
+    # f114
+    if (len(c_word), c_tag) in dict_of_dicts["f114"]:
+        features.append(dict_of_dicts["f114"][(len(c_word), c_tag)])
+
+    # f115
+    if (pp_word, pp_tag, p_word, p_tag, c_word, n_word, c_tag) in dict_of_dicts["f115"]:
+        features.append(dict_of_dicts["f115"][(pp_word, pp_tag, p_word, p_tag, c_word, n_word, c_tag)])
     return features
 
 
