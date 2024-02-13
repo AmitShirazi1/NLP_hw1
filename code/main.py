@@ -5,6 +5,8 @@ from inference import tag_all_test
 
 from sklearn.model_selection import train_test_split
 
+import time
+
 
 def main():
     runs = []
@@ -30,9 +32,10 @@ def main():
         predictions_path = f'new/with_my_e_predictions_lam_{lam}_thresh_{threshold}_beam_2.wtag'
 
         statistics, feature2id = preprocess_train(train_path, threshold)
+        t1 = time.time()
         get_optimal_vector(statistics=statistics, feature2id=feature2id, weights_path=weights_path, lam=lam)
         # TODO: remove the comment from the line above
-
+        print("time of optimization is: " + time.time() - t1)
         with open(weights_path, 'rb') as f:
             optimal_params, feature2id = pickle.load(f)
         for feature in feature2id.feature_to_idx['f100']:
