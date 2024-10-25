@@ -1,8 +1,7 @@
 # MEMM Model for Part-of-Speech Tagging - NLP project
 
 ## Overview
-This project implements a Maximum Entropy Markov Model (MEMM) for part-of-speech (POS) tagging. The main objective is to accurately tag words in sentences based on their context. The implementation is structured into several Python files, each serving a specific role in the process.
-
+This project implements a Maximum Entropy Markov Model (MEMM) for part-of-speech (POS) tagging. The main objective is to accurately tag words in sentences based on their context.
 ## Code Files
 
 ### 1. `preprocessing.py`
